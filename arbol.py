@@ -10,7 +10,6 @@ class Arbol():
     def fit(self, X, y):
 
         self.columnas = X.columns
-
         X = np.array(X)
         self.classes = len(set(y)) 
         self.features = X.shape[1]
@@ -70,23 +69,29 @@ class Arbol():
     def crear_arbol(self, X, y, depth=0):
 
         num_samples_per_class = [np.sum(y == i) for i in range(self.classes)]
+
+        
+        idx, thr = self.best_split(X, y)
+
         predicted_class = np.argmax(num_samples_per_class)
         node = Node(
             gini=self.gini(y),
             num_samples=y.size,
             num_samples_per_class=num_samples_per_class,
-            predicted_class=predicted_class,
+            predicted_class=predicted_class
         )
+        node.feature_name = self.columnas[idx]
+        
 
         # Se hace split recursivamente hasta que se alcanza la profundidad maxima.
         if depth < self.max_depth:
-            idx, thr = self.best_split(X, y)
             if idx is not None:
                 indices_left = X[:, idx] < thr
                 X_left, y_left = X[indices_left], y[indices_left]
                 X_right, y_right = X[~indices_left], y[~indices_left]
                 node.feature_index = idx
                 node.threshold = thr
+                node.feature_name = self.columnas[idx]
                 node.left = self.crear_arbol(X_left, y_left, depth + 1)
                 node.right = self.crear_arbol(X_right, y_right, depth + 1)
         return node
@@ -99,22 +104,88 @@ class Arbol():
             else:
                 node = node.right
         return node.predicted_class
-    
-    def get_first_five_nodes(self, tree):
-        visited_nodes = []
-        queue = [tree]
-        while queue and len(visited_nodes) < 5:
-            current_node = queue.pop(0)
-            visited_nodes.append(current_node.predicted_class)
-            if current_node.left:
-                queue.append(current_node.left)
-            if current_node.right:
-                queue.append(current_node.right)
-        return visited_nodes
 
-    def top5(self):
-        res = self.get_first_five_nodes(self.tree_)
-        return res
+    def feature_importances(self, X_train, y_train):
+
+        features = X_train.select_dtypes(include=[np.number]).columns
+
+        importance = {}
+        for i in range(len(features)):
+            # Obtener los índices de las muestras donde la característica i es igual a 1
+            idx = np.where(X_train[features[i]] > 0)[0]
+            
+            # Obtener el impurity del nodo padre
+            parent_impurity = self.gini(y_train)
+            
+            # Calcular el impurity promedio ponderado de los nodos hijos
+            child_impurity = 0
+            for j in range(2):
+                child_idx = np.intersect1d(idx, np.where(y_train == j)[0])
+                
+                child_weight = len(child_idx) / len(idx)
+                child_impurity += child_weight * self.gini(y_train[child_idx])
+            
+            importance[features[i]] = parent_impurity - child_impurity
+
+        importance = dict(sorted(importance.items(), key=lambda item: item[1], reverse=True))
+        return importance
+    
+    # def get_features(self, tree):
+    #     visited_nodes = []
+    #     names = []
+    #     queue = [tree]
+    #     while queue:
+    #         current_node = queue.pop(0)
+
+    #         dict = {
+    #             "name": current_node.feature_name,
+    #             "importance": self.feature_importances(current_node),
+    #             "predicted_class": current_node.predicted_class,
+    #         }
+
+    #         visited_nodes.append(dict)
+
+    #         if current_node.left:
+    #             queue.append(current_node.left)
+    #         if current_node.right:
+    #             queue.append(current_node.right)
+
+            
+    #         names.append(current_node.feature_name)
+
+    #     return visited_nodes
+    
+    # def get_first_five_nodes(self, tree):
+    #     visited_nodes = []
+    #     names = []
+    #     queue = [tree]
+    #     while queue and len(visited_nodes) < 5:
+    #         current_node = queue.pop(0)
+
+    #         dict = {
+    #             "name": current_node.feature_name,
+    #             "importance": self.f,
+    #             "predicted_class": current_node.predicted_class,
+    #         }
+
+    #         # if current_node.feature_name not in names:
+    #         visited_nodes.append(dict)
+
+    #         if current_node.left:
+    #             queue.append(current_node.left)
+    #         if current_node.right:
+    #             queue.append(current_node.right)
+
+            
+    #         names.append(current_node.feature_name)
+
+    #     return visited_nodes
+
+    # def top5(self):
+    #     res = self.get_features(self.tree_)
+    #     res = sorted(res, key=lambda x: x["importance"], reverse=True)
+    #     res = res[:5]
+    #     return res
 
 class Node:
      def __init__(self, gini, num_samples, num_samples_per_class, predicted_class):
@@ -122,6 +193,7 @@ class Node:
         self.num_samples = num_samples
         self.num_samples_per_class = num_samples_per_class
         self.predicted_class = predicted_class
+        self.feature_name = None
         self.feature_index = 0
         self.threshold = 0
         self.left = None

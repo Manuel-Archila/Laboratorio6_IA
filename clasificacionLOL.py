@@ -3,8 +3,9 @@ import numpy as np
 from arbol import Arbol
 from metricas import *
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, mean_squared_error
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 
 
 def clasificacion(path):
@@ -58,15 +59,15 @@ def clasificacion(path):
     prediction = clf.predict(np.array(X_test))
 
 
-    # mejores = clf.top5()
+    # mejores = clf.feature_importances(X_train, y_train)
+    # top5 = mejores[:5]
 
-    print ("Mejores: ", features)
+    # print ("Top 5: ", top5)
 
     print("Accuracy: ", metrica(prediction , y_test))
 
     # Se encuentran los 5 elementos arriba en el arbol
     arbol = clf.tree_
-
 
     # Se vuelve a crear el modelo utilizando la libreria de sklearn
 
@@ -81,5 +82,16 @@ def clasificacion(path):
     print("Accuracy con libreria: ", accuracy_score(y_test, prediction))
 
 
+    # Random forest
+    print("\nRandom forest")
+
+    regr = RandomForestClassifier(random_state=42)
+    regr.fit(X_train, y_train)
+
+    y_pred = regr.predict(X_test)
+
+    accuracy = accuracy_score(y_test, y_pred)
+
+    print("Accuracy con libreria del Random Forest: ",accuracy)
     
     pass
