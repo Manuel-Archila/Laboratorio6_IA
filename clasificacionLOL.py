@@ -52,17 +52,22 @@ def clasificacion(path):
     X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.2, random_state=42)
     X_test, X_val, y_test, y_val = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
     
-    clf = Arbol(max_depth=2)
+    clf = Arbol(max_depth=3)
     clf.fit(X_train, np.array(y_train))
 
 
     prediction = clf.predict(np.array(X_test))
 
+    
 
-    # mejores = clf.feature_importances(X_train, y_train)
-    # top5 = mejores[:5]
+    importancia = clf.get_feature_importance(X_train, y_train)
 
-    # print ("Top 5: ", top5)
+    indices_ordenados = sorted(importancia, key=importancia.get, reverse=True)
+
+    print("Las top 5 caracteristicas:")
+
+    for i in range(5):
+        print('\t',indices_ordenados[i],' = ', importancia[indices_ordenados[i]])
 
     print("Accuracy: ", metrica(prediction , y_test))
 
@@ -74,10 +79,23 @@ def clasificacion(path):
     X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.2, random_state=42)
     X_test, X_val, y_test, y_val = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
 
-    libreria = DecisionTreeClassifier(max_depth=2)
+    libreria = DecisionTreeClassifier(max_depth=3)
     libreria.fit(X_train, y_train)
 
     prediction = libreria.predict(X_test)
+
+    importancias = libreria.feature_importances_
+
+    importancia = {}
+    for i in range(len(importancias)):
+        importancia[libreria.feature_names_in_[i]] = importancias[i]
+
+    indices_ordenados = sorted(importancia, key=importancia.get, reverse=True)
+
+    print("Las top 5 caracteristicas:")
+
+    for i in range(5):
+        print('\t',indices_ordenados[i],' = ', importancia[indices_ordenados[i]])
 
     print("Accuracy con libreria: ", accuracy_score(y_test, prediction))
 

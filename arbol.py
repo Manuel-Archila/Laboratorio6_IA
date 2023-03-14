@@ -105,30 +105,64 @@ class Arbol():
                 node = node.right
         return node.predicted_class
 
-    def feature_importances(self, X_train, y_train):
+    def gini_gain(self, y, y1, y2):
+        p = len(y1) / len(y)
+        return self.gini(y) - p * self.gini(y1) - (1 - p) * self.gini(y2)
 
-        features = X_train.select_dtypes(include=[np.number]).columns
+    def get_feature_importance(self, X_train, y_train):
+        y_train = np.array(y_train)
+        n_samples, n_features = X_train.shape
+        feature_importances = np.zeros(n_features)
+        for i in range(n_features):
+            # check if feature is numeric
+            if pd.api.types.is_numeric_dtype(X_train.iloc[:, i]):
+                idx = np.where(X_train.iloc[:, i] > 0)[0]
+            else:
+                idx = np.where(X_train.iloc[:, i] != ' ')[0]
+            y_subset = y_train[idx]
+            values, counts = np.unique(X_train.iloc[idx, i], return_counts=True)
+            subsets = [y_subset[np.where(X_train.iloc[idx, i] == v)[0]] for v in values]
+            gain = sum([counts[j] / len(y_subset) * self.gini_gain(y_subset, subsets[j], y_subset[np.where(X_train.iloc[idx, i] != values[j])[0]]) for j in range(len(values))])
+            feature_importances[i] = gain
+        
+        importancia = {}
+        for i in range(len(feature_importances)):
+            importancia[self.columnas[i]] = feature_importances[i]
 
-        importance = {}
-        for i in range(len(features)):
-            # Obtener los índices de las muestras donde la característica i es igual a 1
-            idx = np.where(X_train[features[i]] > 0)[0]
-            
-            # Obtener el impurity del nodo padre
-            parent_impurity = self.gini(y_train)
-            
-            # Calcular el impurity promedio ponderado de los nodos hijos
-            child_impurity = 0
-            for j in range(2):
-                child_idx = np.intersect1d(idx, np.where(y_train == j)[0])
-                
-                child_weight = len(child_idx) / len(idx)
-                child_impurity += child_weight * self.gini(y_train[child_idx])
-            
-            importance[features[i]] = parent_impurity - child_impurity
+        return importancia
 
-        importance = dict(sorted(importance.items(), key=lambda item: item[1], reverse=True))
-        return importance
+
+    # def feature_importances(self, X_train, y_train):
+    #     print('feature_importances')
+
+    #     features = X_train.select_dtypes(include=[np.number]).columns
+        
+    #     X_train = np.array(X_train)
+    #     y_train = np.array(y_train)
+    #     features = np.array(features)
+
+    #     importance = {}
+    #     for i in range(len(features)):
+    #         # Obtener los índices de las muestras donde la característica i es igual a 1
+    #         idx = np.where(X_train[:, i] > 0)[0]
+            
+    #         # Obtener el impurity del nodo padre
+    #         parent_impurity = self.gini(y_train)
+            
+    #         # Calcular el impurity promedio ponderado de los nodos hijos
+    #         child_impurity = 0
+    #         for j in range(2):
+    #             child_idx = np.intersect1d(idx, np.where(y_train == j)[0])
+    #             child_weight = len(child_idx) / len(idx)
+    #             child_impurity = 0
+
+    #             for index in child_idx:
+    #                 child_impurity += child_weight * self.gini(y_train[index])
+            
+    #         importance[features[i]] = parent_impurity - child_impurity
+
+    #     importance = dict(sorted(importance.items(), key=lambda item: item[1], reverse=True))
+    #     return importance
     
     # def get_features(self, tree):
     #     visited_nodes = []
