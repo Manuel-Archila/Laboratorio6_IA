@@ -19,7 +19,7 @@
 
 - Comparacion de modelos
 
-    El modelo que mejor realiza las predicciones es ***** que se puede ver reflejado en el accuracy del modelo con un --- mayor al -- del otro modelo, esto se puede deber a que en este modelo ........
+    El modelo que mejor realiza las predicciones es el modelo de la libreria que se puede ver reflejado en el accuracy del modelo con un 0.71 mayor al 0.70 de nuestro modelo, esto se puede deber a que en esta implementacion esta optimizada y utiliza algoritmos mas avanzados para realizar las predicciones.
 
 - Se implemento random forest en este task con el fin de probar como cambiarian los resultados con respecto a los modelos elaborados anteriormente.
 

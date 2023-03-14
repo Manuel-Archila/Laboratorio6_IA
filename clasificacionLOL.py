@@ -54,7 +54,7 @@ def clasificacion(path):
     X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.2, random_state=42)
     X_test, X_val, y_test, y_val = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
     
-    clf = Arbol(max_depth=2)
+    clf = Arbol(max_depth=3)
     clf.fit(X_train, np.array(y_train))
 
 
