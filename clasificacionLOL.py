@@ -12,7 +12,9 @@ def clasificacion(path):
 
     df = pd.read_csv(path)
 
-    
+    df = df.dropna()
+    df = df.drop_duplicates()
+
     # Se ve si el dataset esta balanceado
 
     print(df["blueWins"].value_counts())
@@ -52,22 +54,22 @@ def clasificacion(path):
     X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.2, random_state=42)
     X_test, X_val, y_test, y_val = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
     
-    clf = Arbol(max_depth=3)
+    clf = Arbol(max_depth=2)
     clf.fit(X_train, np.array(y_train))
 
 
     prediction = clf.predict(np.array(X_test))
 
-    
-
     importancia = clf.get_feature_importance(X_train, y_train)
 
-    indices_ordenados = sorted(importancia, key=importancia.get, reverse=True)
+    # Se ordena importancias de mayor a menor, eliminando nan
+    importancia = {k: v for k, v in importancia.items() if not np.isnan(v)}
+    importancia = dict(sorted(importancia.items(), key=lambda item: item[1], reverse=True))
+
 
     print("Las top 5 caracteristicas:")
-
     for i in range(5):
-        print('\t',indices_ordenados[i],' = ', importancia[indices_ordenados[i]])
+        print('\t',list(importancia.keys())[i],' = ', list(importancia.values())[i] if not np.isnan(list(importancia.values())[i]) else 0)
 
     print("Accuracy: ", metrica(prediction , y_test))
 
@@ -79,23 +81,10 @@ def clasificacion(path):
     X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.2, random_state=42)
     X_test, X_val, y_test, y_val = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
 
-    libreria = DecisionTreeClassifier(max_depth=3)
+    libreria = DecisionTreeClassifier(max_depth=2)
     libreria.fit(X_train, y_train)
 
     prediction = libreria.predict(X_test)
-
-    importancias = libreria.feature_importances_
-
-    importancia = {}
-    for i in range(len(importancias)):
-        importancia[libreria.feature_names_in_[i]] = importancias[i]
-
-    indices_ordenados = sorted(importancia, key=importancia.get, reverse=True)
-
-    print("Las top 5 caracteristicas:")
-
-    for i in range(5):
-        print('\t',indices_ordenados[i],' = ', importancia[indices_ordenados[i]])
 
     print("Accuracy con libreria: ", accuracy_score(y_test, prediction))
 
@@ -113,3 +102,4 @@ def clasificacion(path):
     print("Accuracy con libreria del Random Forest: ",accuracy)
     
     pass
+

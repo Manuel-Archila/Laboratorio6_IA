@@ -12,5 +12,3 @@ clasificacion = clasificacion(path)
 
 print('\n Clasificacion de partidas de FIFA \n')
 clasiFifa = clasificacionFIFA(path2)
-
-

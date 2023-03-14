@@ -37,6 +37,7 @@ def clasificacionFIFA(path):
     # Se crea el dataset con las columnas seleccionadas
 
     df = df[columnas]
+    print(df)
 
 
     # Normalizar las columnas
